@@ -1,4 +1,3 @@
-// index.js
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
@@ -6,11 +5,11 @@ require('dotenv').config();
 
 // Kreiranje nove instance klijenta
 const client = new Client({
-    intents: [ // <<<<<<< IZMJENA OVDJE
+    intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,   // Potrebno za primanje poruka
+        GatewayIntentBits.MessageContent,  // Potrebno za čitanje sadržaja poruka
+        GatewayIntentBits.GuildMembers,    // Potrebno za XP sistem
     ],
     partials: [Partials.Channel],
 });
@@ -49,4 +48,4 @@ for (const file of eventFiles) {
 }
 
 // Prijavljivanje bota koristeći token iz .env fajla
-client.login(process.env.DISCORD_TOKEN); // <<<<<<< IZMJENA OVDJE
+client.login(process.env.DISCORD_TOKEN);
