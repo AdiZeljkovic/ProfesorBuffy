@@ -6,7 +6,12 @@ require('dotenv').config();
 
 // Kreiranje nove instance klijenta
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds],
+    intents: [ // <<<<<<< IZMJENA OVDJE
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+    ],
     partials: [Partials.Channel],
 });
 
@@ -24,7 +29,7 @@ for (const folder of commandFolders) {
         if ('data' in command && 'execute' in command) {
             client.commands.set(command.data.name, command);
         } else {
-            console.log(` Komanda na putanji ${filePath} nema potrebna "data" ili "execute" svojstva.`);
+            console.log(`[UPOZORENJE] Komanda na putanji ${filePath} nema potrebna "data" ili "execute" svojstva.`);
         }
     }
 }
@@ -43,5 +48,5 @@ for (const file of eventFiles) {
     }
 }
 
-// Prijavljivanje bota koristeći token iz.env fajla
-client.login(process.env.BOT_TOKEN);
+// Prijavljivanje bota koristeći token iz .env fajla
+client.login(process.env.DISCORD_TOKEN); // <<<<<<< IZMJENA OVDJE
