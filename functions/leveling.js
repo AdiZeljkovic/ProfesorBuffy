@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const { EmbedBuilder } = require('discord.js');
+require('dotenv').config(); // <-- DODANO: Obavezno za čitanje .env fajla
 
 // Inicijalizacija baze podataka (kreirat će fajl 'levels.db' u glavnom folderu)
 const db = new Database('levels.db');
@@ -16,14 +17,13 @@ db.prepare(`
 `).run();
 
 // Mapa koja povezuje nivo sa ID-em uloge
-// Ovdje unesi ID-jeve uloga koje si kreirao na serveru!
 const levelRoles = {
-    1: '1388122709027852470',   // Npr. za ulogu "User"
+    1: '1388122709027852470',   // Npr. za ulogu "Guest" ili početnu
     5: '1388122822999674890',   // Npr. za ulogu "User"
-    15: '1388122864254718002', // Npr. za "Povezani Korisnik"
-    30: '1388123517605773342', // Npr. za "Veteran"
-    50: '1388123600019525693', // Npr. za "Overclocker"
-    75: '1388123672509943878'  // Npr. za "Legenda Portala"
+    15: '1388122864254718002',  // Npr. za "Povezani Korisnik"
+    30: '1388123517605773342',  // Npr. za "Veteran"
+    50: '1388123600019525693',  // Npr. za "Overclocker"
+    75: '1388123672509943878'   // Npr. za "Legenda Portala"
 };
 
 // Cooldown da se spriječi spamovanje poruka za XP
@@ -48,7 +48,7 @@ async function addXp(member) {
           .run(user.id, user.guildId, user.userId, user.xp, user.level);
     }
 
-    // Dodajemo nasumičan broj XP-a (npr. između 15 i 25)
+    // Dodajemo nasumičan broj XP-a
     const xpToAdd = Math.floor(Math.random() * 11) + 15;
     user.xp += xpToAdd;
 
@@ -58,23 +58,37 @@ async function addXp(member) {
     // Provjera da li je korisnik dostigao novi nivo
     if (user.xp >= xpNeededForNextLevel) {
         user.level++;
-        // Opciono: možeš resetovati XP na 0 ili oduzeti potreban XP
-        // user.xp = user.xp - xpNeededForNextLevel; 
-
         console.log(`${member.user.tag} je dostigao/la nivo ${user.level}!`);
-
-        // Pošalji poruku o novom nivou
-        const channel = member.channel; // Šaljemo u isti kanal gdje je poruka poslata
-        const levelUpEmbed = new EmbedBuilder()
-            .setColor('#f0d000')
-            .setTitle('🎉 Level Up!')
-            .setDescription(`Čestitamo, <@${userId}>! Dostigao/la si **Nivo ${user.level}**! Nastavi tako!`);
         
-        try {
-            await channel.send({ embeds: [levelUpEmbed] });
-        } catch (error) {
-            console.error("Nisam mogao poslati Level Up poruku:", error);
+        // ==========================================================
+        // ===== POČETAK IZMJENE: Slanje poruke u poseban kanal =====
+        // ==========================================================
+
+        // Učitavamo ID kanala za level up iz .env fajla
+        const levelUpChannelId = process.env.LEVEL_UP_CHANNEL_ID;
+        if (levelUpChannelId) {
+            const channel = member.guild.channels.cache.get(levelUpChannelId);
+
+            if (channel) {
+                const levelUpEmbed = new EmbedBuilder()
+                    .setColor('#f0d000')
+                    .setTitle('🎉 Level Up!')
+                    .setDescription(`Čestitamo, <@${userId}>! Dostigao/la si **Nivo ${user.level}**! Nastavi tako!`);
+                
+                try {
+                    await channel.send({ embeds: [levelUpEmbed] });
+                } catch (error) {
+                    console.error("Nisam mogao poslati Level Up poruku u definisani kanal:", error);
+                }
+            } else {
+                console.log(`[GREŠKA] Kanal za level up poruke sa ID-em ${levelUpChannelId} nije pronađen.`);
+            }
         }
+        
+        // ==========================================================
+        // =============== KRAJ IZMJENE =============================
+        // ==========================================================
+
 
         // Provjera i dodjela nove uloge
         const roleId = levelRoles[user.level];
